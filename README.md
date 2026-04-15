@@ -18,3 +18,7 @@ Software needed: MANUS Core SDK, Python, PyTorch, ROS2 Humble, Gazebo, LLM API (
 Research needed: VLA (Vision‑Language‑Action) models, gesture classification methods, LLM grounding for robotics (SayCan, Code‑as‑Policies, RT‑2), human grasp taxonomy (Feix et al.)
 
 Deliverables: Gesture classifier trained model, template‑based language module, LLM integration node for ROS2, full evaluation report with ablation study
+
+# Starting point:
+- Download the MANUS SDK (https://docs.manus-meta.com/2.4.0/Products/Optitrack%20Metagloves/)
+- Set up ROS2 Humble + Gazebo + MoveIt2 for robot simulation (Ur5e(?) Universal Robots)
