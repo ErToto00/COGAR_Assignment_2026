@@ -4,6 +4,7 @@ project(jazzy_ur5e_control)
 find_package(ament_cmake REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(ur_description REQUIRED)
+find_package(ament_python REQUIRED)
 
 add_executable(jazzy_ur5e_control_node src/jazzy_ur5e_control_node.py)
 
@@ -17,4 +18,5 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME}
 )
 
+ament_python_install_package()
 ament_package()
