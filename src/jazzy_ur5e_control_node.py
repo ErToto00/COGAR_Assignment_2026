@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
-from std_srvs.srv import SetBool
+from onrobot_msgs.srv import GripperControl
 
 class JazzyUR5eControlNode(Node):
     def __init__(self):
@@ -13,8 +13,8 @@ class JazzyUR5eControlNode(Node):
             10)
         self.subscription  # prevent unused variable warning
 
-        # Create a client to the gripper control service
-        self.gripper_client = self.create_client(SetBool, '/ur5e/gripper_control')
+        # Create a client to the OnRobot gripper control service
+        self.gripper_client = self.create_client(GripperControl, '/onrobot/gripper_control')
 
     def listener_callback(self, msg):
         if msg.data == "grasp":
@@ -26,8 +26,8 @@ class JazzyUR5eControlNode(Node):
     def activate_gripper(self):
         while not self.gripper_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Service not available, waiting again...')
-        request = SetBool.Request()
-        request.data = True
+        request = GripperControl.Request()
+        request.command = 'activate'
         future = self.gripper_client.call_async(request)
         future.add_done_callback(self.gripper_response_callback)
 
