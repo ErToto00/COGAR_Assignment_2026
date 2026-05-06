@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from std_msgs.msg import String
 
 class JazzyUR5eControlNode(Node):
     def __init__(self):
