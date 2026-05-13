@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>jazzy_ur5e_control</name>
+  <name>jazzy_go2_control</name>
   <version>0.0.0</version>
-  <description>A ROS2 Jazzy project to control the UR5e robot.</description>
+  <description>A ROS2 Jazzy project to control the Go2 robot and Manus Metagloves.</description>
   <maintainer email="you@example.com">Your Name</maintainer>
   <license>Apache License 2.0</license>
 
@@ -10,8 +10,7 @@
   <buildtool_depend>ament_python</buildtool_depend>
 
   <exec_depend>rclpy</exec_depend>
-  <exec_depend>ur_description</exec_depend>
-  <exec_depend>onrobot_msgs</exec_depend>
+  <depend>rclcpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

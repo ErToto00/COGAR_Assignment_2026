@@ -1,0 +1,13 @@
+ManusSDK_v3.1.1
+.aider*
+onrobot_2FG7_gripper_description
+build
+install
+log
+GEMINI.md
+install_go2_urdf.sh
+full_setup.sh
+src/manus*
+src/unitree*
+go2_description_ros2
+src/go2_description_ros2

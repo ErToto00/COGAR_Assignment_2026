@@ -1,22 +1,20 @@
 cmake_minimum_required(VERSION 3.5)
-project(jazzy_ur5e_control)
+project(jazzy_go2_control)
 
 find_package(ament_cmake REQUIRED)
+find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
-find_package(ur_description REQUIRED)
-find_package(ament_python REQUIRED)
 
-add_executable(jazzy_ur5e_control_node src/jazzy_ur5e_control_node.py)
-
-ament_target_dependencies(jazzy_ur5e_control_node
-  rclpy
-  ur_description
-)
-
-install(TARGETS
-  jazzy_ur5e_control_node
+install(PROGRAMS
+  src/go2_connection_node.py
+  src/go2_walk_node.py
+  src/llm_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
-ament_python_install_package()
+install(DIRECTORY
+  launch
+  DESTINATION share/${PROJECT_NAME}
+)
+
 ament_package()
