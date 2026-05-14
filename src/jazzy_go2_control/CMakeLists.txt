@@ -6,14 +6,15 @@ find_package(rclcpp REQUIRED)
 find_package(rclpy REQUIRED)
 
 install(PROGRAMS
-  src/go2_connection_node.py
-  src/go2_walk_node.py
-  src/llm_node.py
+  scripts/go2_connection_node.py
+  scripts/go2_walk_node.py
+  scripts/llm_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(DIRECTORY
   launch
+  config
   DESTINATION share/${PROJECT_NAME}
 )
 

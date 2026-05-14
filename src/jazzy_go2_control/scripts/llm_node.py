@@ -43,22 +43,22 @@ class LLMNode(Node):
         else:
             self.get_logger().warning("joblib/sklearn not found. Classifier disabled.")
 
-        # Subscriptions & Publications
-        self.subscription = self.create_subscription(
-            String,
-            'manus_data',
-            self.manus_callback,
-            10)
-        
-        self.publisher = self.create_publisher(
-            String,
-            'go_command',
-            10)
-        
-        # Inference state
-        self.is_processing = False
-        self.latest_input = None
-        self.lock = threading.Lock()
+    # Subscriptions & Publications
+    self.subscription = self.create_subscription(
+        String,
+        'manus_data',
+        self.manus_callback,
+        10)
+    
+    self.publisher = self.create_publisher(
+        String,
+        'go_command',
+        10)
+    
+    # Inference state
+    self.is_processing = False
+    self.latest_input = None
+    self.lock = threading.Lock()
 
     def manus_callback(self, msg):
         input_data = msg.data
