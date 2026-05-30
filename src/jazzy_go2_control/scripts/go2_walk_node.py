@@ -37,9 +37,38 @@ class Go2WalkNode(Node):
         else:
             self.get_logger().warning("unitree_sdk2py not found. Node will simulate SDK calls.")
 
+    def stop(self):
+        self.get_logger().info('Stopping the robot.')
+        if self.sport_client:
+            self.sport_client.Move(0.0, 0.0, 0.0)
+        else:
+            self.get_logger().info('[Simulated SDK] Stopping (v_x=0.0, v_y=0.0, v_yaw=0.0)')
+
+    def rotate(self, direction):
+        self.get_logger().info(f'Rotating the robot {direction}.')
+        # vyaw: positive for counter-clockwise, negative for clockwise
+        if direction == 'cw':
+            vyaw = -0.5
+        elif direction == 'ccw':
+            vyaw = 0.5
+        else:
+            self.get_logger().warning(f'Unknown rotation direction: {direction}')
+            return
+
+        if self.sport_client:
+            self.sport_client.Move(0.0, 0.0, vyaw)
+        else:
+            self.get_logger().info(f'[Simulated SDK] Rotating (v_yaw={vyaw})')
+
     def command_callback(self, msg):
         command = msg.data.strip().lower()
-        if command == 'go':
+        parts = command.split()
+        if not parts:
+            return
+
+        action = parts[0]
+
+        if action == 'go':
             self.get_logger().info('Received "go" command, making the robot walk straight forward.')
             if self.sport_client:
                 # Move(vx, vy, vyaw)
@@ -47,6 +76,14 @@ class Go2WalkNode(Node):
                 self.sport_client.Move(0.3, 0.0, 0.0)
             else:
                 self.get_logger().info('[Simulated SDK] Walking straight forward (v_x=0.3)')
+        elif action == 'stop':
+            self.stop()
+        elif action == 'rotate':
+            if len(parts) > 1:
+                direction = parts[1]
+                self.rotate(direction)
+            else:
+                self.get_logger().warning('Rotate command missing direction (cw or ccw).')
         else:
             self.get_logger().info(f'Received unknown command: "{command}"')
 
