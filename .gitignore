@@ -6,8 +6,5 @@ install
 log
 GEMINI.md
 install_go2_urdf.sh
-full_setup.sh
-src/manus*
-src/unitree*
-go2_description_ros2
-src/go2_description_ros2
+MANUS_Core_2.3.0_SDK
+unitree_sdk2_python

@@ -99,7 +99,9 @@ class LLMNode(Node):
             prompt = (
                 f"You are a robot controller for a Unitree Go2. "
                 f"Input from sensor: {current_input} "
-                f"Respond with a short command (like 'go', 'stop', 'rotate cw', 'rotate ccw', 'dance')."
+                f"Respond with a short command or sequence of commands separated by commas. "
+                f"Valid commands are: 'stop', 'go forward', 'go back', 'rotate left', 'rotate right'. "
+                f"Examples: 'stop', 'rotate left', 'go back', 'stop, rotate left, go forward'."
             )
             
             self.get_logger().info(f"Sending to LLM: {prompt}")

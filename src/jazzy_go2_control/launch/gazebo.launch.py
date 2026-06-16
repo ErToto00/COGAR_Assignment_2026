@@ -84,6 +84,12 @@ def generate_launch_description():
         name='llm_node',
         output='screen'
     )
+    gesture_node = Node(
+        package=pkg_name,
+        executable='gesture_classifier_node.py',
+        name='gesture_classifier_node',
+        output='screen'
+    )
 
     nodes_to_start = [
         gazebo_launch,
@@ -95,6 +101,7 @@ def generate_launch_description():
         connection_node,
         walk_node,
         llm_node,
+        gesture_node,
     ]
 
     return LaunchDescription(declared_arguments + nodes_to_start)

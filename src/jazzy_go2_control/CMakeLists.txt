@@ -9,6 +9,7 @@ install(PROGRAMS
   scripts/go2_connection_node.py
   scripts/go2_walk_node.py
   scripts/llm_node.py
+  scripts/gesture_classifier_node.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

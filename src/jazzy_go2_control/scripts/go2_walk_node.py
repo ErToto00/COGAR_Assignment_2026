@@ -2,10 +2,13 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+import time
+import threading
+import math
 
 # Try importing the official Unitree SDK
 try:
-    from unitree_sdk2py.core.channel import ChannelFactory
+    from unitree_sdk2py.core.channel import ChannelFactoryInitialize
     from unitree_sdk2py.go2.sport.sport_client import SportClient
     HAS_UNITREE_SDK = True
 except ImportError:
@@ -27,7 +30,7 @@ class Go2WalkNode(Node):
         if HAS_UNITREE_SDK:
             try:
                 # Initialize network channel (0 typically defaults to the primary interface)
-                ChannelFactory.Instance().Init(0, "")
+                ChannelFactoryInitialize(0, "")
                 self.sport_client = SportClient()
                 self.sport_client.SetTimeout(10.0)
                 self.sport_client.Init()
@@ -36,56 +39,66 @@ class Go2WalkNode(Node):
                 self.get_logger().error(f"Failed to initialize SportClient: {e}")
         else:
             self.get_logger().warning("unitree_sdk2py not found. Node will simulate SDK calls.")
+            
+        self.action_queue = []
+        self.lock = threading.Lock()
+        self.executor_thread = threading.Thread(target=self.execute_commands_loop, daemon=True)
+        self.executor_thread.start()
 
-    def stop(self):
-        self.get_logger().info('Stopping the robot.')
+    def set_velocity(self, vx, vy, vyaw):
         if self.sport_client:
-            self.sport_client.Move(0.0, 0.0, 0.0)
+            self.sport_client.Move(vx, vy, vyaw)
         else:
-            self.get_logger().info('[Simulated SDK] Stopping (v_x=0.0, v_y=0.0, v_yaw=0.0)')
+            self.get_logger().info(f'[Simulated SDK] Move(vx={vx}, vy={vy}, vyaw={vyaw})')
 
-    def rotate(self, direction):
-        self.get_logger().info(f'Rotating the robot {direction}.')
-        # vyaw: positive for counter-clockwise, negative for clockwise
-        if direction == 'cw':
-            vyaw = -0.5
-        elif direction == 'ccw':
-            vyaw = 0.5
-        else:
-            self.get_logger().warning(f'Unknown rotation direction: {direction}')
-            return
-
-        if self.sport_client:
-            self.sport_client.Move(0.0, 0.0, vyaw)
-        else:
-            self.get_logger().info(f'[Simulated SDK] Rotating (v_yaw={vyaw})')
+    def execute_commands_loop(self):
+        while rclpy.ok():
+            command = None
+            with self.lock:
+                if self.action_queue:
+                    command = self.action_queue.pop(0)
+            
+            if command:
+                self.get_logger().info(f"Executing step: {command}")
+                cmd = command.strip()
+                if cmd == 'stop':
+                    self.set_velocity(0.0, 0.0, 0.0)
+                    time.sleep(1.0) # Small delay for stop to settle
+                elif cmd == 'go forward' or cmd == 'forward' or cmd == 'go':
+                    self.set_velocity(0.3, 0.0, 0.0)
+                elif cmd == 'go back' or cmd == 'back':
+                    self.set_velocity(-0.3, 0.0, 0.0)
+                elif 'rotate' in cmd:
+                    # 90 degrees rotation (pi/2 radians) at 0.5 rad/s takes ~3.14s
+                    rot_speed = 0.5
+                    duration = (math.pi / 2.0) / rot_speed
+                    if 'left' in cmd or 'ccw' in cmd:
+                        self.set_velocity(0.0, 0.0, rot_speed)
+                    elif 'right' in cmd or 'cw' in cmd:
+                        self.set_velocity(0.0, 0.0, -rot_speed)
+                    else:
+                        self.set_velocity(0.0, 0.0, rot_speed) # default
+                    
+                    # Wait for 90 deg rotation to complete
+                    time.sleep(duration)
+                    # Stop after rotation completes
+                    self.set_velocity(0.0, 0.0, 0.0)
+                else:
+                    self.get_logger().warning(f"Unknown sub-command: {cmd}")
+            else:
+                time.sleep(0.1)
 
     def command_callback(self, msg):
-        command = msg.data.strip().lower()
-        parts = command.split()
-        if not parts:
-            return
-
-        action = parts[0]
-
-        if action == 'go':
-            self.get_logger().info('Received "go" command, making the robot walk straight forward.')
-            if self.sport_client:
-                # Move(vx, vy, vyaw)
-                # vx: forward velocity in m/s
-                self.sport_client.Move(0.3, 0.0, 0.0)
-            else:
-                self.get_logger().info('[Simulated SDK] Walking straight forward (v_x=0.3)')
-        elif action == 'stop':
-            self.stop()
-        elif action == 'rotate':
-            if len(parts) > 1:
-                direction = parts[1]
-                self.rotate(direction)
-            else:
-                self.get_logger().warning('Rotate command missing direction (cw or ccw).')
-        else:
-            self.get_logger().info(f'Received unknown command: "{command}"')
+        command = msg.data.strip().strip("'\"").lower()
+        self.get_logger().info(f'Received full command sequence: "{command}"')
+        
+        # Split by comma to support sequences like "stop, rotate left, go forward"
+        parts = [p.strip() for p in command.split(',') if p.strip()]
+        
+        with self.lock:
+            # Clear existing queue if a new command arrives
+            self.action_queue = parts
+            # If the first command is not 'stop', force a stop first? Let's leave exactly as requested
 
 def main(args=None):
     rclpy.init(args=args)
