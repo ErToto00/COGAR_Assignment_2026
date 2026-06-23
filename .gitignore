@@ -1,10 +1,13 @@
 ManusSDK_v3.1.1
+ManusSDK/
 .aider*
 onrobot_2FG7_gripper_description
-build
-install
-log
-GEMINI.md
+build/
+install/
+log/
 install_go2_urdf.sh
-MANUS_Core_2.3.0_SDK
-unitree_sdk2_python
+unitree_sdk2_python/
+
+# Ignore third-party ROS2 packages
+src/*
+!src/jazzy_go2_control/

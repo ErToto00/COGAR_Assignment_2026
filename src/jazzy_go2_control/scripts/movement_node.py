@@ -2,6 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
+from geometry_msgs.msg import Twist
 import time
 import threading
 import math
@@ -14,9 +15,9 @@ try:
 except ImportError:
     HAS_UNITREE_SDK = False
 
-class Go2WalkNode(Node):
+class MovementNode(Node):
     def __init__(self):
-        super().__init__('go2_walk_node')
+        super().__init__('movement_node')
         self.get_logger().info("Go2 Walk Node Started.")
         
         # Subscribe to a command topic
@@ -25,6 +26,9 @@ class Go2WalkNode(Node):
             'go_command',
             self.command_callback,
             10)
+            
+        # Publisher for Gazebo simulation
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         
         self.sport_client = None
         if HAS_UNITREE_SDK:
@@ -50,6 +54,13 @@ class Go2WalkNode(Node):
             self.sport_client.Move(vx, vy, vyaw)
         else:
             self.get_logger().info(f'[Simulated SDK] Move(vx={vx}, vy={vy}, vyaw={vyaw})')
+            
+        # Also publish to cmd_vel for Gazebo
+        twist = Twist()
+        twist.linear.x = float(vx)
+        twist.linear.y = float(vy)
+        twist.angular.z = float(vyaw)
+        self.cmd_vel_pub.publish(twist)
 
     def execute_commands_loop(self):
         while rclpy.ok():
@@ -102,7 +113,7 @@ class Go2WalkNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = Go2WalkNode()
+    node = MovementNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

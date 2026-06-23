@@ -11,9 +11,9 @@ try:
 except ImportError:
     HAS_UNITREE_SDK = False
 
-class Go2ConnectionNode(Node):
+class ConnectionNode(Node):
     def __init__(self):
-        super().__init__('go2_connection_node')
+        super().__init__('connection_node')
         self.get_logger().info("Go2 Connection Node Started.")
         
         # Subscribe to the commands published by the llm_node
@@ -118,7 +118,7 @@ class Go2ConnectionNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = Go2ConnectionNode()
+    node = ConnectionNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

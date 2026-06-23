@@ -1,4 +1,5 @@
 #!/bin/bash
+clear
 
 # Exit immediately if a command exits with a non-zero status
 set -e
@@ -9,42 +10,46 @@ echo "--- Starting Build and Launch Process ---"
 cd "$(dirname "$0")"
 WORKSPACE_ROOT=$(pwd)
 
-echo "Linking Manus ROS2 packages with absolute paths..."
-mkdir -p src
-
-# Define absolute paths for Manus SDK
-# manus_ros2 is inside the workspace
-MANUS_SDK_ROOT="$(realpath "$WORKSPACE_ROOT/manus_ros2")"
-
-if [ -d "$MANUS_SDK_ROOT" ]; then
-    # Link manus_ros2 into src/ so colcon can build it
-    if [ ! -L src/manus_ros2 ] || [ "$(readlink -f src/manus_ros2)" != "$MANUS_SDK_ROOT" ]; then
-        ln -sf "$MANUS_SDK_ROOT" src/manus_ros2
-        echo "Linked manus_ros2 -> $MANUS_SDK_ROOT"
-    fi
-else
-    echo "Error: Manus SDK directory not found at $MANUS_SDK_ROOT"
-    exit 1
-fi
+# Function to ensure all processes spawned by the launch file are killed
+cleanup() {
+    echo "Terminating all associated processes to ensure a clean exit..."
+    pkill -f "gazebo.launch.py" || true
+    pkill -x "rviz2" || true
+    pkill -x "manus_ros2" || true
+    pkill -f "gz sim" || true
+    pkill -x "ruby" || true
+}
+# Trap exit signals to run the cleanup function
+trap cleanup EXIT INT TERM
 
 
 echo "Building the workspace packages..."
-# colcon build should now find both jazzy_go2_control (in src/) and manus_ros2 (in src/)
-colcon build --symlink-install
+colcon build --base-paths src --symlink-install
 
 echo "Sourcing local install space..."
 source install/setup.bash
 
-echo "Starting manus_ros2 node in background..."
 export MANUS_IP="192.168.1.100"
-ros2 run manus_ros2 manus_ros2 &
-MANUS_PID=$!
-
-echo "Waiting a few seconds for manus_ros2 to initialize..."
-sleep 3
 
 echo "Starting the unified project launch (Gazebo, RViz, and Go2 nodes)..."
-ros2 launch jazzy_go2_control gazebo.launch.py
 
-# Optional: Kill background processes when the launch file exits
-trap "kill $MANUS_PID" EXIT
+# Classifier mode (options: 'lstm' or 'knn')
+CLASSIFIER_MODE="lstm"
+
+# Obstacle mode ('llm' or 'autonomous')
+OBSTACLE_MODE="llm"
+if [ "$1" == "--llm" ] || [ "$1" == "llm" ]; then
+    OBSTACLE_MODE="llm"
+    echo "Obstacle avoidance running in LLM mode"
+else
+    echo "Obstacle avoidance running in autonomous mode"
+fi
+
+# LLM mode ('simple' or 'code_as_policies')
+LLM_MODE="simple"
+
+# Fix CycloneDDS initialization error in WSL by forcing it to use loopback for local simulation
+export CYCLONEDDS_URI="<CycloneDDS><Domain><General><NetworkInterfaceAddress>lo</NetworkInterfaceAddress><AllowMulticast>false</AllowMulticast></General></Domain></CycloneDDS>"
+
+ros2 launch jazzy_go2_control gazebo.launch.py classifier_type:=$CLASSIFIER_MODE obstacle_mode:=$OBSTACLE_MODE llm_mode:=$LLM_MODE
+

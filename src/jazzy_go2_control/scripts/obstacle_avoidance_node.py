@@ -11,7 +11,7 @@ class ObstacleAvoidanceNode(Node):
         
         # Parameters
         self.declare_parameter('mode', 'autonomous') # 'autonomous' or 'llm'
-        self.declare_parameter('threshold', 0.5) # meters
+        self.declare_parameter('threshold', 0.4) # meters
         
         self.mode = self.get_parameter('mode').get_parameter_value().string_value
         self.threshold = self.get_parameter('threshold').get_parameter_value().double_value
@@ -27,7 +27,7 @@ class ObstacleAvoidanceNode(Node):
         self.cmd_pub = self.create_publisher(String, 'go_command', 10)
         
         # Publisher for LLM data (llm mode)
-        self.llm_pub = self.create_publisher(String, 'manus_data', 10)
+        self.llm_pub = self.create_publisher(String, 'lidar_context', 10)
         
         self.last_llm_time = self.get_clock().now()
         
@@ -43,7 +43,7 @@ class ObstacleAvoidanceNode(Node):
         if self.mode == 'autonomous':
             out_msg = String()
             if min_distance < self.threshold:
-                out_msg.data = "stop, rotate right" # Basic avoidance action
+                out_msg.data = "stop" # Basic avoidance action
                 self.get_logger().info(f"Obstacle detected at {min_distance:.2f}m. Autonomous action: {out_msg.data}")
             else:
                 out_msg.data = "go forward"
@@ -55,7 +55,7 @@ class ObstacleAvoidanceNode(Node):
             current_time = self.get_clock().now()
             if (current_time - self.last_llm_time).nanoseconds > 5e9:
                 out_msg = String()
-                out_msg.data = f"Lidar sensor reports the nearest obstacle is at {min_distance:.2f} meters. The safe threshold is {self.threshold} meters. Should I 'go forward', 'stop', or 'rotate right'?"
+                out_msg.data = f"Nearest obstacle is at {min_distance:.2f} meters (threshold: {self.threshold}m)."
                 self.llm_pub.publish(out_msg)
                 self.get_logger().info(f"Sent lidar data to LLM: min_distance={min_distance:.2f}m")
                 self.last_llm_time = current_time
