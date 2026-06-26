@@ -22,3 +22,11 @@ Deliverables: Gesture classifier trained model, template‑based language module
 # Starting point:
 - Download the MANUS SDK (https://docs.manus-meta.com/2.4.0/Products/Optitrack%20Metagloves/)
 - Set up ROS2 Humble + Gazebo + MoveIt2 for robot simulation (Ur5e(?) Universal Robots)
+
+
+# How to run the project:
+1) Download Ollama
+2) Download qwen2.5-coder7b via Ollama
+3) Start the script 'full_setup.sh"
+4) In the script 'build_and_launch.sh', change the parameters of the nodes to cable them in the desired way
+5) Start the script 'build_and_launch.sh'
