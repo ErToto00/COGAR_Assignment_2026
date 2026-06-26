@@ -49,7 +49,7 @@ fi
 LLM_MODE="simple"
 
 # Fix CycloneDDS initialization error in WSL by forcing it to use loopback for local simulation
-export CYCLONEDDS_URI="<CycloneDDS><Domain><General><NetworkInterfaceAddress>lo</NetworkInterfaceAddress><AllowMulticast>false</AllowMulticast></General></Domain></CycloneDDS>"
+export CYCLONEDDS_URI="<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"lo\"/></Interfaces><AllowMulticast>false</AllowMulticast></General></Domain></CycloneDDS>"
 
 ros2 launch jazzy_go2_control gazebo.launch.py classifier_type:=$CLASSIFIER_MODE obstacle_mode:=$OBSTACLE_MODE llm_mode:=$LLM_MODE
 
